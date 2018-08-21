@@ -21,7 +21,9 @@ val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 lazy val cinnamonDependencies = Seq(
   // Use Coda Hale Metrics and Lagom instrumentation
   Cinnamon.library.cinnamonCHMetrics,
-  Cinnamon.library.cinnamonLagom
+  Cinnamon.library.cinnamonLagom,
+  Cinnamon.library.cinnamonPrometheus,
+  Cinnamon.library.cinnamonPrometheusHttpServer
 )
 
 lazy val security = (project in file("security"))
@@ -56,12 +58,10 @@ lazy val itemImpl = (project in file("item-impl"))
       lagomScaladslPersistenceCassandra,
       lagomScaladslTestKit,
       lagomScaladslKafkaBroker,
-      Cinnamon.library.cinnamonCHMetrics,
-      Cinnamon.library.cinnamonLagom,
       "com.datastax.cassandra" % "cassandra-driver-extras" % "3.0.0",
       macwire,
       scalaTest
-    )
+    ) ++ cinnamonDependencies
   )
   .settings(lagomForkedTestSettings: _*)
   .dependsOn(itemApi, biddingApi)
@@ -73,7 +73,6 @@ lazy val biddingApi = (project in file("bidding-api"))
     resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
       lagomScaladslApi,
-      Cinnamon.library.cinnamonPrometheusHttpServer,
       Cinnamon.library.cinnamonJvmMetricsProducer,
       playJsonDerivedCodecs
     ) ++ cinnamonDependencies
@@ -87,6 +86,7 @@ lazy val biddingImpl = (project in file("bidding-impl"))
   .settings(
     resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
+      lagomScaladslPersistenceCassandra,
       macwire,
       scalaTest
     ) ++ cinnamonDependencies,
@@ -99,7 +99,6 @@ lazy val searchApi = (project in file("search-api"))
   .settings(
     resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
-      Cinnamon.library.cinnamonPrometheusHttpServer,
       Cinnamon.library.cinnamonJvmMetricsProducer,
       lagomScaladslApi,
       playJsonDerivedCodecs
@@ -130,7 +129,6 @@ lazy val transactionApi = (project in file("transaction-api"))
     resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
       lagomScaladslApi,
-      Cinnamon.library.cinnamonPrometheusHttpServer,
       Cinnamon.library.cinnamonJvmMetricsProducer,
       playJsonDerivedCodecs
     ) ++ cinnamonDependencies ,
@@ -160,7 +158,6 @@ lazy val userApi = (project in file("user-api"))
   .settings(
     resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
-      Cinnamon.library.cinnamonPrometheusHttpServer,
       Cinnamon.library.cinnamonJvmMetricsProducer,
       lagomScaladslApi,
       playJsonDerivedCodecs
