@@ -18,6 +18,14 @@ val playJsonDerivedCodecs = "org.julienrf" %% "play-json-derived-codecs" % "4.0.
 val macwire = "com.softwaremill.macwire" %% "macros" % "2.2.5" % "provided"
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 
+lazy val cinnamonDependencies = Seq(
+  // Use Coda Hale Metrics and Lagom instrumentation
+  Cinnamon.library.cinnamonCHMetrics,
+  Cinnamon.library.cinnamonLagom,
+  Cinnamon.library.cinnamonPrometheus,
+  Cinnamon.library.cinnamonPrometheusHttpServer
+)
+
 lazy val security = (project in file("security"))
   .settings(commonSettings: _*)
   .settings(
@@ -30,19 +38,22 @@ lazy val security = (project in file("security"))
   )
 
 lazy val itemApi = (project in file("item-api"))
+  .enablePlugins(Cinnamon)
   .settings(commonSettings: _*)
   .settings(
+    resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
       lagomScaladslApi,
       playJsonDerivedCodecs
-    )
+    ) ++ cinnamonDependencies
   )
   .dependsOn(security)
 
 lazy val itemImpl = (project in file("item-impl"))
   .settings(commonSettings: _*)
-  .enablePlugins(LagomScala, SbtReactiveAppPlugin)
+  .enablePlugins(LagomScala, SbtReactiveAppPlugin, Cinnamon)
   .settings(
+    resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
       lagomScaladslPersistenceCassandra,
       lagomScaladslTestKit,
@@ -50,69 +61,77 @@ lazy val itemImpl = (project in file("item-impl"))
       "com.datastax.cassandra" % "cassandra-driver-extras" % "3.0.0",
       macwire,
       scalaTest
-    )
+    ) ++ cinnamonDependencies
   )
   .settings(lagomForkedTestSettings: _*)
   .dependsOn(itemApi, biddingApi)
 
 lazy val biddingApi = (project in file("bidding-api"))
+  .enablePlugins(Cinnamon)
   .settings(commonSettings: _*)
   .settings(
+    resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
       lagomScaladslApi,
+      Cinnamon.library.cinnamonJvmMetricsProducer,
       playJsonDerivedCodecs
-    )
+    ) ++ cinnamonDependencies
   )
   .dependsOn(security)
 
 lazy val biddingImpl = (project in file("bidding-impl"))
   .settings(commonSettings: _*)
-  .enablePlugins(LagomScala, SbtReactiveAppPlugin)
+  .enablePlugins(LagomScala, SbtReactiveAppPlugin, Cinnamon)
   .dependsOn(biddingApi, itemApi)
   .settings(
+    resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
       lagomScaladslPersistenceCassandra,
-      lagomScaladslTestKit,
-      lagomScaladslKafkaBroker,
       macwire,
       scalaTest
-    ),
+    ) ++ cinnamonDependencies,
     maxErrors := 10000
-
   )
 
 lazy val searchApi = (project in file("search-api"))
+  .enablePlugins(Cinnamon)
   .settings(commonSettings: _*)
   .settings(
+    resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
+      Cinnamon.library.cinnamonJvmMetricsProducer,
       lagomScaladslApi,
       playJsonDerivedCodecs
-    )
+    ) ++ cinnamonDependencies
   )
   .dependsOn(security)
 
 lazy val searchImpl = (project in file("search-impl"))
   .settings(commonSettings: _*)
-  .enablePlugins(LagomScala, SbtReactiveAppPlugin)
+  .enablePlugins(LagomScala, SbtReactiveAppPlugin, Cinnamon)
   .dependsOn(searchApi, itemApi, biddingApi)
   .settings(
+    resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
       lagomScaladslPersistenceCassandra,
       lagomScaladslKafkaClient,
       lagomScaladslTestKit,
       macwire,
       scalaTest
-    )
+    ) ++ cinnamonDependencies
   )
 
 lazy val transactionApi = (project in file("transaction-api"))
+  .enablePlugins(Cinnamon)
   .settings(commonSettings: _*)
   .dependsOn(itemApi)
   .settings(
+    resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
       lagomScaladslApi,
+      Cinnamon.library.cinnamonJvmMetricsProducer,
       playJsonDerivedCodecs
-    ),
+    ) ++ cinnamonDependencies ,
     EclipseKeys.skipProject := true
   )
   .dependsOn(security)
@@ -120,42 +139,48 @@ lazy val transactionApi = (project in file("transaction-api"))
 lazy val transactionImpl = (project in file("transaction-impl"))
   .settings(commonSettings: _*)
   // .enablePlugins(LagomScala)
+  .enablePlugins(Cinnamon)
   .dependsOn(transactionApi, biddingApi)
   .settings(
+    resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
       lagomScaladslPersistenceCassandra,
       lagomScaladslTestKit,
       macwire,
       scalaTest
-    ),
+    ) ++ cinnamonDependencies,
     EclipseKeys.skipProject := true
   )
 
 lazy val userApi = (project in file("user-api"))
+  .enablePlugins(Cinnamon)
   .settings(commonSettings: _*)
   .settings(
+    resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
+      Cinnamon.library.cinnamonJvmMetricsProducer,
       lagomScaladslApi,
       playJsonDerivedCodecs
-    )
+    ) ++ cinnamonDependencies
   )
   .dependsOn(security)
 
 lazy val userImpl = (project in file("user-impl"))
   .settings(commonSettings: _*)
-  .enablePlugins(LagomScala, SbtReactiveAppPlugin)
+  .enablePlugins(LagomScala, SbtReactiveAppPlugin, Cinnamon)
   .dependsOn(userApi)
   .settings(
+    resolvers += Cinnamon.resolver.commercial,
     libraryDependencies ++= Seq(
       lagomScaladslPersistenceCassandra,
       macwire,
       scalaTest
-    )
+    ) ++ cinnamonDependencies
   )
 
 lazy val webGateway = (project in file("web-gateway"))
   .settings(commonSettings: _*)
-  .enablePlugins(PlayScala, LagomPlay, SbtReactiveAppPlugin)
+  .enablePlugins(PlayScala, LagomPlay, SbtReactiveAppPlugin, Cinnamon)
   .dependsOn(biddingApi, itemApi, userApi)
   .settings(
     libraryDependencies ++= Seq(
@@ -167,7 +192,7 @@ lazy val webGateway = (project in file("web-gateway"))
 
       "org.webjars" % "foundation" % "6.2.3",
       "org.webjars" % "foundation-icon-fonts" % "d596a3cfb3"
-    ),
+    ) ++ cinnamonDependencies,
     EclipseKeys.preTasks := Seq(compile in Compile),
     httpIngressPaths := Seq("/")
   )
